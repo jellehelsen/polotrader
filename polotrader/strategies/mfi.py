@@ -1,5 +1,4 @@
 from .strategy import Strategy
-import talib
 import numpy
 
 class MFI(Strategy):

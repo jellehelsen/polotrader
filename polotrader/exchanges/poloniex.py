@@ -3,14 +3,12 @@ from pandas import DataFrame as df, read_json
 from urllib.parse import urlencode
 import hmac
 from hashlib import sha512
-from time import time, sleep, mktime
+from time import time, sleep, mktime, strptime
 from decimal import *
 from datetime import datetime, timedelta
 
-import time
-
 def createTimeStamp(datestr, format='%d-%m-%Y'):
-    return int(time.mktime(time.strptime(datestr, format)))
+    return int(mktime(strptime(datestr, format)))
 
 class Poloniex(Exchange):
     base_uri = 'https://poloniex.com'

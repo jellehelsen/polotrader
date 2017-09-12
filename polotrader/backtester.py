@@ -12,9 +12,9 @@ class BackTester(object):
 
     def handle_row(self, timestamp, row):
         if row['signal'] == 1 and self.current_balance > 0:
-            self.buy(row['open'])
+            self.buy(row['close'])
         elif row['signal'] == -1 and self.alt_balance > 0:
-            self.sell(row['open'])
+            self.sell(row['close'])
 
     def run(self, start_date, end_date):
         self.get_data(start_date, end_date)

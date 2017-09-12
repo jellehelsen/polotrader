@@ -32,6 +32,3 @@ class MFI(Strategy):
             elif row['mfi'] > 80:
                 dataframe.iloc[i,-1] = -1
 
-
-        # dataframe['signal'] = [-1 if x > 80 else 1 if 0 < x < 20 else 0 for x in dataframe['mfi']]
-        dataframe['signal'] = dataframe['signal'].shift(1)

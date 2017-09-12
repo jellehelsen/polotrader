@@ -25,5 +25,3 @@ class Combined(Strategy):
                 dataframe.iloc[i,-1] = -1
             elif row['sma10'] > row['sma100'] and prev_row['sma10'] < prev_row['sma100']:
                 dataframe.iloc[i,-1] = 1
-
-        dataframe['signal'] = dataframe['signal'].shift(1)

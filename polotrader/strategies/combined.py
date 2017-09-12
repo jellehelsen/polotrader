@@ -1,27 +1,46 @@
 from .strategy import Strategy
-import talib
+import numpy
 
 class Combined(Strategy):
-    def generate_signals(self, dataframe):
-        dataframe['mfi'] = talib.MFI(dataframe['high'].values, dataframe['low'].values,
-                dataframe['close'].values, dataframe['volume'].values)
+    def __init__(self, shift_size=1):
+        self.shift_size = shift_size
 
-        dataframe['upper'], dataframe['middle'], dataframe['lower'] = talib.BBANDS(dataframe['close'].values, timeperiod=50, matype=talib.MA_Type.SMA)
-        dataframe['sma10'] = dataframe['close'].rolling(10).mean()
-        dataframe['sma100'] = dataframe['close'].rolling(100).mean()
-        dataframe['signal'] = 0
-        for i in range(len(dataframe)):
-            row = dataframe.iloc[i]
-            prev_row = dataframe.iloc[i-1]
-            if row['close'] >= row['lower'] and prev_row['close'] < prev_row['lower']:
-                dataframe.iloc[i,-1] = 1
-            elif row['close'] <= row['upper'] and prev_row['close'] > prev_row['upper']:
-                dataframe.iloc[i,-1] = -1
-            elif prev_row['mfi'] < 20 and row['mfi'] > prev_row['mfi']:
-                dataframe.iloc[i,-1] = 1
-            elif prev_row['mfi'] > 80 and row['mfi'] < prev_row['mfi']:
-                dataframe.iloc[i,-1] = -1
-            elif row['sma10'] < row['sma100'] and prev_row['sma10'] > prev_row['sma100']:
-                dataframe.iloc[i,-1] = -1
-            elif row['sma10'] > row['sma100'] and prev_row['sma10'] < prev_row['sma100']:
-                dataframe.iloc[i,-1] = 1
+    def calc_mfi(self, highs, lows, closes, volumes):
+        typical = (highs + lows + closes) / 3.0
+        typical.name = 'typical'
+        frame = typical.to_frame()
+        frame['rmf'] = typical * volumes
+        frame['mfu'] = frame[(frame['typical'] > frame['typical'].shift(1))]['rmf']
+        frame['mfd'] = frame[(frame['typical'] < frame['typical'].shift(1))]['rmf']
+        frame.fillna(0, inplace=True)
+        frame['mfu14'] = frame['mfu'].rolling(14).sum()
+        frame['mfd14'] = frame['mfd'].rolling(14).sum()
+        frame['mfr'] = frame['mfu14'] / frame['mfd14']
+        frame['mfi'] = 100 - (100 / (1 + frame['mfr']))
+        return frame['mfi']
+
+    def generate_signals(self, dataframe):
+        dataframe['mfi'] = self.calc_mfi(dataframe['high'], dataframe['low'],
+                dataframe['close'], dataframe['volume'])
+
+        dataframe['middle'] = dataframe['close'].rolling(10).mean()
+        std = dataframe['close'].rolling(10).std()
+        dataframe['upper'] = dataframe['middle'] + (2 * std)
+        dataframe['lower'] = dataframe['middle'] - (2 * std)
+
+        mfi = dataframe['mfi'].values
+        close = dataframe['close'].values
+        lower = dataframe['lower'].values
+        upper = dataframe['upper'].values
+        prev_close = dataframe['close'].shift(self.shift_size).values
+        prev_mfi = dataframe['mfi'].shift(self.shift_size).values
+        prev_lower = dataframe['lower'].shift(self.shift_size).values
+        prev_upper = dataframe['upper'].shift(self.shift_size).values
+        numpy.seterr(invalid='ignore')
+        conditions = [
+         ((mfi < 20) & (close >= lower) & (prev_close < prev_lower) &
+             (mfi > prev_mfi) & (close < prev_close)),
+         ((mfi > 80) & (close <= upper) & (prev_close > prev_upper) &
+             (mfi < prev_mfi) & (close > prev_close)),
+        ]
+        dataframe['signal'] = numpy.select(conditions, [1, -1], default=0)

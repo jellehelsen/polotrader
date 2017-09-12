@@ -2,33 +2,34 @@ from .strategy import Strategy
 import numpy
 
 class MFI(Strategy):
+    def __init__(self, window_size=4, shift_size=5):
+        self.window_size = window_size
+        self.shift_size = shift_size
+    def calc_mfi(self, highs, lows, closes, volumes):
+        typical = (highs + lows + closes) / 3.0
+        typical.name = 'typical'
+        frame = typical.to_frame()
+        frame['rmf'] = typical * volumes
+        frame['mfu'] = frame[(frame['typical'] > frame['typical'].shift(1))]['rmf']
+        frame['mfd'] = frame[(frame['typical'] < frame['typical'].shift(1))]['rmf']
+        frame.fillna(0, inplace=True)
+        frame['mfu14'] = frame['mfu'].rolling(14).sum()
+        frame['mfd14'] = frame['mfd'].rolling(14).sum()
+        frame['mfr'] = frame['mfu14'] / frame['mfd14']
+        frame['mfi'] = 100 - (100 / (1 + frame['mfr']))
+        return frame['mfi']
+
     def generate_signals(self, dataframe):
-        dataframe['typical'] = (dataframe['high'] + dataframe['low'] + dataframe['close']) / 3.0
-        dataframe['rmf'] = dataframe['typical'] * dataframe['volume']
+        dataframe['mfi'] = self.calc_mfi(dataframe['high'], dataframe['low'], dataframe['close'], dataframe['volume'])
 
-        dataframe['mfu'] = 0
-        dataframe['mfd'] = 0
-        dataframe['mfi'] = numpy.nan
-        dataframe['signal'] = 0
-        for i in range(len(dataframe)):
-            row = dataframe.iloc[i]
-            prev_row = dataframe.iloc[i-1]
+        numpy.seterr(invalid='ignore')
+        mfi = dataframe['mfi'].values
+        close = dataframe['close'].values
+        prev_close = dataframe['close'].shift(self.shift_size).values
+        prev_mfi = dataframe['mfi'].shift(self.shift_size).values
+        conditions = [
+         (mfi < 20) & (close <= prev_close) & (mfi >= prev_mfi),
+         ((mfi > 80) & (mfi <= prev_mfi)),
+        ]
 
-            if row['typical'] > prev_row['typical']:
-                dataframe.iloc[i, -4] = row['rmf']
-            if row['typical'] < prev_row['typical']:
-                dataframe.iloc[i, -3] = row['rmf']
-            if i > 14:
-                mfu = dataframe.iloc[i-13:i+1, -4].sum()
-                mfd = dataframe.iloc[i-13:i+1, -3].sum()
-                if mfd == 0.0:
-                    mfd = 1e-6
-                mfr = mfu/mfd
-                dataframe.iloc[i, -2] = 100 - 100 / (1 + mfr)
-            row = dataframe.iloc[i]
-            prev_row = dataframe.iloc[i-1]
-            if row['mfi'] < 20:
-                dataframe.iloc[i,-1] = 1
-            elif row['mfi'] > 80:
-                dataframe.iloc[i,-1] = -1
-
+        dataframe['signal'] = numpy.select(conditions, [1,-1], default=0)

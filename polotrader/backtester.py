@@ -20,16 +20,16 @@ class BackTester(object):
     def run(self, start_date, end_date):
         self.get_data(start_date, end_date)
         if self.strategy is not None:
-            print("Generating signals")
+            # print("Generating signals")
             self.strategy.generate_signals(self.dataframe)
-            print("Done generating signals")
+            # print("Done generating signals")
         for row in self.dataframe[(self.dataframe['signal'] != 0)].iterrows():
             self.handle_row(row[0], row[1])
         if self.alt_balance > 0:
             self.sell(self.dataframe.iloc[-1]['close'])
 
     def get_data(self,start_date, end_date):
-        print("Fetching data")
+        # print("Fetching data")
         pair = (self.pair[0] + '_' + self.pair[1]).upper()
         json = self.exchange.chart_data(pair, start_date, end_date, resolution=self.resolution)
         dataframe = pandas.DataFrame.from_records(json, index='date')

@@ -2,7 +2,7 @@ import time
 import pandas
 import warnings
 from exchanges import Poloniex
-from strategies import MFI
+from strategies import *
 class Bot(object):
     def __init__(self, pair=('btc','eth'), strategy=None, api_key=None, api_secret=None, resolution=300):
         self.pair = pair

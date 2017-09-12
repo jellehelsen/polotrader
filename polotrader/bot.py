@@ -61,5 +61,7 @@ if __name__ == '__main__':
     import os
     api_key = os.getenv('POLONIEX_API_KEY')
     api_secret = os.getenv('POLONIEX_API_SECRET')
-    bot = Bot(strategy=MFI(), api_key=api_key, api_secret=api_secret)
+    coin = os.getenv("POLOBOT_COIN", 'eth')
+    shift_width = os.getenv("POLOBOT_SHIFTWIDTH", 1)
+    bot = Bot(strategy=Combined(shift_size=int(shift_width)), pair=('btc', coin), api_key=api_key, api_secret=api_secret)
     bot.run()

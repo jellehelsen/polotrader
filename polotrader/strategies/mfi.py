@@ -26,11 +26,10 @@ class MFI(Strategy):
         mfi = dataframe['mfi'].values
         close = dataframe['close'].values
         prev_close = dataframe['close'].shift(self.shift_size).values
-        prev_mfi = dataframe['close'].shift(self.shift_size).values
+        prev_mfi = dataframe['mfi'].shift(self.shift_size).values
         conditions = [
-         (mfi < 20) & (close < prev_close) & (mfi > prev_mfi),
-         ((mfi > 80) & (close > prev_close) &
-         (mfi < prev_mfi)),
+         (mfi < 20) & (close <= prev_close) & (mfi >= prev_mfi),
+         ((mfi > 80) & (mfi <= prev_mfi)),
         ]
 
         dataframe['signal'] = numpy.select(conditions, [1,-1], default=0)

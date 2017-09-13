@@ -16,7 +16,7 @@ class Poloniex(Exchange):
         self.logger.debug("%s: %s: %s" % (type(self).__name__, command, params))
         params['command'] = command
         params['nonce'] = int(time()*1000)
-        query = urlencode(params)
+        query = bytes(urlencode(params), 'utf-8')
         sign = hmac.new(self.secret, query, sha512).hexdigest()
         headers = {'Key': self.api_key, 'Sign': sign}
         result = self.post('/tradingApi', headers=headers, data=params)

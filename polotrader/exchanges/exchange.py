@@ -5,7 +5,7 @@ import logging
 class Exchange(object):
     def __init__(self, api_key=None, secret=None, logger=None):
         self.api_key = api_key
-        self.secret = secret
+        self.secret = bytes(secret, 'utf-8')
         self._coin_info = None
         if logger:
             self.logger = logger

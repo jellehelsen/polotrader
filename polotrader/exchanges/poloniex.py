@@ -6,6 +6,7 @@ from hashlib import sha512
 from time import time, sleep, mktime, strptime
 from decimal import *
 from datetime import datetime, timedelta
+from functools import reduce
 
 def createTimeStamp(datestr, format='%d-%m-%Y'):
     return int(mktime(strptime(datestr, format)))
@@ -44,7 +45,7 @@ class Poloniex(Exchange):
         pair = pair or 'all'
         result = self.trading_request('returnOpenOrders', { 'currencyPair': pair.replace('/','_') }).json()
         if order_number:
-            return filter(lambda x: int(x['orderNumber']) == int(order_number), result)
+            return list(filter(lambda x: int(x['orderNumber']) == int(order_number), result))
         else:
             return result
 
@@ -53,7 +54,7 @@ class Poloniex(Exchange):
         result = self.trading_request('returnTradeHistory',\
                 {'currencyPair': pair.replace('/','_')}).json()
         if order_number:
-            return filter(lambda x: int(x['orderNumber']) == int(order_number), result)
+            return list(filter(lambda x: int(x['orderNumber']) == int(order_number), result))
         else:
             return result
 

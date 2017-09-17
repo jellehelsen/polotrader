@@ -33,8 +33,8 @@ with description(Poloniex):
             m.get('https://poloniex.com/public?command=returnTicker', text=rates)
             data = self.subject.ticker('min_ask')
             expect(data).to.be.instanceof(df)
-            expect(data.ix['BTC/LTC','min_ask']).to.eq(0.02589999)
-            expect(data.ix['BTC/NXT','min_ask']).to.eq(0.00005710)
+            expect(data.loc['BTC/LTC','min_ask']).to.eq(0.02589999)
+            expect(data.loc['BTC/NXT','min_ask']).to.eq(0.00005710)
 
     with context('private data'):
         with before.each:

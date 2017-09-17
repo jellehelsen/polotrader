@@ -1,8 +1,8 @@
 import time
 import pandas
 import warnings
-from exchanges import Poloniex
-from strategies import *
+from .exchanges import Poloniex
+from .strategies import *
 class Bot(object):
     def __init__(self, pair=('btc','eth'), strategy=None, api_key=None, api_secret=None, resolution=300):
         self.pair = pair
@@ -20,7 +20,7 @@ class Bot(object):
         start = int(time.mktime(time.gmtime())-86400)
         json = self.exchange.chart_data2(pair, start, end, resolution=self.resolution)
         dataframe = pandas.DataFrame.from_records(json, index='date')
-        dataframe.set_index(pandas.to_datetime(dataframe.index, unit='s'), inplace=True)
+        dataframe.set_index(pandas.to_datetime(dataframe.index, unit='s', utc=True), inplace=True)
         self.dataframe = dataframe
         if self.strategy is not None:
             self.strategy.generate_signals(self.dataframe)

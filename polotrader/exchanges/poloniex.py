@@ -25,7 +25,7 @@ class Poloniex(Exchange):
         return result
 
     def balance(self, coin):
-        return float(self.trading_request("returnBalances").json()[coin])
+        return float(self.trading_request("returnBalances").json()[coin.upper()])
 
     def addresses(self):
         return self.trading_request('returnDepositAddresses').json()

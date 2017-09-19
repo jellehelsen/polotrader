@@ -45,7 +45,7 @@ with description(Poloniex):
                 m.register_uri('POST', 'https://poloniex.com/tradingApi',\
                         request_headers={'Key': 'key'},\
                         text=balance)
-                data = self.subject.balance('BTC')
+                data = self.subject.balance('btc')
                 expect(data).to.be.a.float()
                 expect(data).to.eq(0.59098578)
 
